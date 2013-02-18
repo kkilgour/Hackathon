@@ -22,7 +22,7 @@ public abstract class PrimeMapper<K extends WritableComparable<?>, V extends Wri
 extends ModelMapper<PrimeRecord, LongWritable, Text, K, V> {
 
 	/**
-	 * Configures the MapReduce job to read data from the Freebase quad dump.
+	 * Configures the MapReduce job to read data from the number dump.
 	 *
 	 * @param job
 	 */

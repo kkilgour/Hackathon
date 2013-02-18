@@ -9,6 +9,7 @@ import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.DoubleWritable;
+import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
@@ -30,19 +31,31 @@ public class PrimeTest extends Configured implements Tool {
 
 		@Override
 		protected void map(PrimeRecord record, Context context) throws IOException, InterruptedException {
-//			context.write(new Text(record.getStockSymbol()), new DoubleWritable(record.getDividend()));
-			if (record.getNum()%2 == 0) {
-				context.write(new Text("number"), new LongWritable(1));
-			
+			//if (record.getNum()%2 == 0) {
+				//context.write(new Text(Integer.toString(record.getNum())), new LongWritable(1));
+			//}
+			boolean flag = true;
+			for(int i=2; i<=Math.sqrt(record.getNum()); i++) {
+	              if (record.getNum()%i == 0) {
+	            	  flag = false;
+	            	  break;	            	 
+	              }
+	        }
+			if (flag) {
+				context.write(new Text(Integer.toString(record.getNum())), new LongWritable(1));
+			} else {
+				// Do nothing.  Number is not prime.  Boo
 			}
+			
+			
 		}
 
 	}
 
-	public static class PrimeTestReducer extends Reducer<Text, DoubleWritable, Text, Text> {
+	public static class PrimeTestReducer extends Reducer<Text, LongWritable, Text, Text> {
 
 		@Override
-		protected void reduce(Text key, Iterable<DoubleWritable> values, Context context) throws IOException, InterruptedException {
+		protected void reduce(Text key, Iterable<LongWritable> values, Context context) throws IOException, InterruptedException {
 			context.write(key, new Text("yes"));
 		}
 
