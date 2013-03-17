@@ -1,29 +1,19 @@
 package org.hackreduce.examples.flights;
 
 import java.io.IOException;
-import java.text.NumberFormat;
-import java.util.Locale;
-
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Reducer;
-import org.apache.hadoop.mapreduce.Mapper.Context;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
-import org.hackreduce.examples.stockexchange.HighestDividend.Count;
-import org.hackreduce.examples.stockexchange.MarketCapitalization.MarketCapitalizationMapper;
-import org.hackreduce.examples.stockexchange.MarketCapitalization.MarketCapitalizationReducer;
 import org.hackreduce.mappers.FlightMapper;
-import org.hackreduce.mappers.ModelMapper;
-import org.hackreduce.mappers.StockExchangeMapper;
 import org.hackreduce.models.FlightRecord;
 
 
@@ -32,36 +22,26 @@ import org.hackreduce.models.FlightRecord;
  *
  */
 public class KellyFlightsLengthTest extends Configured implements Tool {
-	public enum Count {
-		DESTINATIONS
-	}
 	
 	public static class KellyFlightsLengthTestMapper extends FlightMapper<Text, LongWritable> {
 		protected void map(FlightRecord record, Context context) throws IOException, InterruptedException {
-			//context.write(new Text(record.getDestination()), new DoubleWritable(record.getPrice()));
 			String path = record.getOrigin() + " to " + record.getDestination();
 			long flightlength = record.getReturnTime().getTime() - record.getDepartureTime().getTime();
 			context.write(new Text(path), new LongWritable(flightlength));
-			//context.write(new Text(record.getDestination()), new LongWritable(flightlength));
 		}
 	}
 	
 	public static class KellyFlightsLengthTestReducer extends Reducer<Text, LongWritable, Text, Text> {
-		//NumberFormat currencyFormat = NumberFormat.getCurrencyInstance(Locale.getDefault());
-		NumberFormat currencyFormat = NumberFormat.getInstance(Locale.getDefault());
 		protected void reduce(Text key, Iterable<LongWritable> values, Context context) throws IOException, InterruptedException {
-			context.getCounter(Count.DESTINATIONS).increment(1);
 
-			long highestPrice = 0;
+			long sumLength = 0;
 			int records = 0;
 			for (LongWritable value : values) {
-				// highestPrice = Math.max(highestPrice, value.get());
-				highestPrice = highestPrice + value.get();
+				sumLength = sumLength + value.get();
 				records++;
 			}
 
-			//context.write(key, new Text(currencyFormat.format(highestPrice/records)));
-			context.write(key, new Text(currencyFormat.format(highestPrice/records/1000/60/60/24)));
+			context.write(key, new Text(String.valueOf(sumLength/records/1000/60/60/24)));
 		}
 	}
 	
